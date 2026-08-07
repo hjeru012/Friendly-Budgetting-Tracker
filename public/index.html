@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friendly Budgeting Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div id="auth-container">
+        <div id="login-card" class="card">
+            <h2>Welcome Back!</h2>
+            <input type="text" id="login-user" placeholder="Username">
+            <input type="password" id="login-pass" placeholder="Password">
+            <button onclick="handleLogin()">Log In</button>
+            <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">Using the new account? Please Sign Up again!</p>
+            <p>New here? <span class="link" onclick="toggleAuth(true)">Sign Up</span></p>
+        </div>
+
+        <div id="signup-card" class="card" style="display: none;">
+            <h2>Create Account</h2>
+            <input type="email" id="reg-email" placeholder="Email Address">
+            <input type="text" id="reg-user" placeholder="Username">
+            <input type="password" id="reg-pass" placeholder="Password">
+            <input type="password" id="reg-confirm" placeholder="Confirm Password">
+            <button onclick="handleSignUp()">Sign Up</button>
+            <p>Already have an account? <span class="link" onclick="toggleAuth(false)">Log In</span></p>
+        </div>
+    </div>
+
+    <div id="app-container" style="display: none;">
+        <nav class="sidebar">
+            <div class="menu-header">Menu</div>
+            <ul>
+                <li onclick="showPage('dashboard')">Dashboard</li>
+                <li onclick="showPage('archive')">Archives / History</li>
+                <li class="logout-btn" onclick="handleLogout()">Log Out</li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <h1 class="main-title">
+                FRIENDLY BUDGETING TRACKER
+                <img src="LOGO.png" alt="Logo" class="header-logo">
+            </h1>
+
+            <section id="page-dashboard">
+                <div class="dashboard-grid">
+                    <div class="wallet-card">
+                        <div class="wallet-header">MY WALLET</div>
+                        <div class="wallet-body">
+                            <label>Selected Period:</label>
+                            <p id="display-date" class="date-text">Select a date in entries</p>
+                            
+                            <div class="stat-line"><span>Savings:</span> <span id="stat-savings">₱0.00</span></div>
+                            <div class="stat-line"><span>Expenses:</span> <span id="stat-expenses">₱0.00</span></div>
+                            <hr>
+                            <div class="stat-line balance"><span>Balance:</span> <span id="stat-balance">₱0.00</span></div>
+
+                            <div class="action-buttons">
+                                <button class="btn-save" onclick="openModal('modal-savings')">Add Savings</button>
+                                <button class="btn-expense" onclick="openModal('modal-expense')">Add Expense</button>
+                            </div>
+                            <button class="btn-view" onclick="renderReport()">View Report</button>
+                            <button class="btn-archive" onclick="archiveCurrentData()">Clear & Archive Period</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-archive" style="display: none;">
+                <div class="archive-container">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="wallet-header">ARCHIVED DATA</div>
+                        <button onclick="resetCurrentPeriod()" style="background:#6c757d; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:0.8rem;">Reset Current History</button>
+                    </div>
+                    <div id="archive-list" class="archive-list">
+                        <!-- Archived summaries go here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modal-savings" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">ADD SAVINGS</div>
+            <div class="modal-body">
+                <label>Amount: ₱</label>
+                <input type="number" id="savings-amount" placeholder="0.00">
+                <label>Date:</label>
+                <input type="date" id="savings-date">
+                <div class="modal-footer">
+                    <button class="btn-confirm" onclick="saveSavings()">Save</button>
+                    <button class="btn-cancel" onclick="closeModal('modal-savings')">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-expense" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">ADD EXPENSE</div>
+            <div class="modal-body">
+                <label>Category (Multi-select):</label>
+                <div class="category-grid">
+                    <button class="cat-btn" onclick="toggleCategory(this, 'Food')">Food</button>
+                    <button class="cat-btn" onclick="toggleCategory(this, 'Transportation')">Transportation</button>
+                    <button class="cat-btn" onclick="toggleCategory(this, 'School')">School</button>
+                </div>
+                <label>Others (Optional):</label>
+                <input type="text" id="expense-other" placeholder="Specify other...">
+                
+                <label>Amount: ₱</label>
+                <input type="number" id="expense-amount" placeholder="0.00">
+                <label>Date:</label>
+                <input type="date" id="expense-date">
+                <div class="modal-footer">
+                    <button class="btn-confirm" onclick="saveExpense()">Save</button>
+                    <button class="btn-cancel" onclick="closeModal('modal-expense')">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-report" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">SAVINGS REPORT</div>
+            <div class="modal-body">
+                <div class="report-stats">
+                    <p>Total Savings: <span id="rep-savings">₱0.00</span></p>
+                    <p>Total Expenses: <span id="rep-expenses">₱0.00</span></p>
+                    <p><strong>Remaining: <span id="rep-balance">₱0.00</span></strong></p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="savingsChart"></canvas>
+                </div>
+                <button class="btn-view" style="width: 100%; margin-top: 10px;" onclick="closeModal('modal-report')">Back to Home</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
